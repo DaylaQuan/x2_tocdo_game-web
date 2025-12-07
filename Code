@@ -1,0 +1,45 @@
+
+(function() {
+    console.clear();
+    // --- CẤU HÌNH ---
+    var SPEED_NORMAL = 0.5;   // Tốc độ 1x (Bình thường)
+    var SPEED_SLOW = 0.15;    // Tốc độ 0.15x (Chậm, đề nghị dùng để né)
+    window.currentSpeed = SPEED_NORMAL;
+    var originalNow = window.performance.now;
+    var lastRealTime = originalNow.call(window.performance);
+    var virtualTime = lastRealTime;
+    window.performance.now = function() {
+        var realNow = originalNow.call(window.performance);
+        var dt = realNow - lastRealTime; 
+        virtualTime += dt * window.currentSpeed;
+        lastRealTime = realNow;
+        return virtualTime;
+    };
+    var originalDateNow = Date.now;
+    var startDateReal = originalDateNow();
+    var startDateVirtual = startDateReal;
+    Date.now = function() {
+        return startDateVirtual + (window.performance.now() - virtualTime); 
+    }
+    var originalRaf = window.requestAnimationFrame;
+    window.requestAnimationFrame = function(callback) {
+        return originalRaf(function(timestamp) {
+            callback(window.performance.now()); 
+        });
+    };
+    document.addEventListener('keydown', function(e) {
+        if (e.key === "Shift" || e.code === "ShiftLeft") {
+            if (window.currentSpeed !== SPEED_SLOW) {
+                window.currentSpeed = SPEED_SLOW;
+                console.log("🐢 Slow Motion: ON (Nhả Shift để rẽ nhanh)");
+            }
+        }
+    });
+    document.addEventListener('keyup', function(e) {
+        if (e.key === "Shift" || e.code === "ShiftLeft") {
+            window.currentSpeed = SPEED_NORMAL;
+            console.log("🐇 Normal Speed: ON");
+        }
+    });
+    alert(" \n\nChiến lược chơi:\n1. THẢ SHIFT để chạy và rẽ nhanh.\n2. GIỮ SHIFT để làm chậm game và né chướng ngại vật.");
+})();
