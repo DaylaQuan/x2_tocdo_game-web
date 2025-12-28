@@ -1,0 +1,69 @@
+// --- TOOL: NEON WIREFRAME & X-RAY VISION ---
+
+(function() {
+    console.clear();
+    console.log("%c🌟 KÍCH HOẠT CHẾ ĐỘ LƯỚI NEON - X-RAY!", "color: cyan; background: black; font-size: 18px; font-weight: bold");
+    console.log("👉 [1]: Tắt Hack (Bình thường)");
+    console.log("👉 [2]: Bật Lưới Neon (Ẩn bề mặt)");
+    console.log("👉 [3]: Nhìn xuyên tường (Wallhack)");
+
+    var isNeonWireframe = false;
+    var isWallhack = false;
+
+    const contexts = [WebGLRenderingContext, WebGL2RenderingContext];
+    
+    contexts.forEach(ctx => {
+        if (!ctx) return;
+
+        const originalDrawElements = ctx.prototype.drawElements;
+        ctx.prototype.drawElements = function(mode, count, type, offset) {
+            let targetMode = mode;
+
+            if (isNeonWireframe && mode === this.TRIANGLES) {
+                // BƯỚC 1: Ẩn bề mặt, biến thành đường kẻ
+                targetMode = this.LINES; 
+
+                // BƯỚC 2: Làm nổi bật màu lưới (Mẹo Additive Blending)
+                // Ép các đường kẻ phải phát sáng bằng cách cộng dồn màu sắc
+                this.enable(this.BLEND);
+                this.blendFunc(this.ONE, this.ONE); 
+                
+                // Thử tăng độ dày đường kẻ (Tùy trình duyệt có hỗ trợ hay không)
+                this.lineWidth(2.0); 
+            }
+
+            // BƯỚC 3: Xử lý nhìn xuyên tường
+            if (isWallhack) {
+                this.disable(this.DEPTH_TEST);
+            } else {
+                this.enable(this.DEPTH_TEST);
+            }
+
+            originalDrawElements.call(this, targetMode, count, type, offset);
+            
+            // Trả lại trạng thái cũ sau khi vẽ xong 1 vật thể để tránh lỗi màn hình
+            if (isNeonWireframe) {
+                this.disable(this.BLEND);
+            }
+        };
+    });
+
+    // Điều khiển bằng bàn phím
+    document.addEventListener('keydown', function(e) {
+        if (e.key === '1') {
+            isNeonWireframe = false;
+            isWallhack = false;
+            console.log("Visual: NORMAL");
+        }
+        if (e.key === '2') {
+            isNeonWireframe = !isNeonWireframe;
+            console.log("Neon Wireframe: " + (isNeonWireframe ? "ON" : "OFF"));
+        }
+        if (e.key === '3') {
+            isWallhack = !isWallhack;
+            console.log("Wallhack: " + (isWallhack ? "ON" : "OFF"));
+        }
+    });
+
+    alert("HACK LƯỚI NEON ĐÃ SẴN SÀNG!\n\nNhấn phím [2] để thấy điều kỳ diệu.");
+})();
